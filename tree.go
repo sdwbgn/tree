@@ -1,8 +1,9 @@
 package main
 
 import (
-	"flag"
+	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 type DirTreeNode struct {
@@ -36,17 +37,17 @@ func generateDirTree(dir string, name string, dirOnly bool) DirTreeNode {
 func printBranches(branches *[]bool, lastChars string) {
 	for key, br := range *branches {
 		if key+1 == len(*branches) {
-			print(lastChars)
+			fmt.Print(lastChars)
 		} else if br {
-			print("│   ")
+			fmt.Print("│   ")
 		} else {
-			print("    ")
+			fmt.Print("    ")
 		}
 	}
 }
 
 func printDirTree(node DirTreeNode, branches *[]bool) {
-	println(node.name)
+	fmt.Println(node.name)
 	if branches == nil {
 		branches = new([]bool)
 	}
@@ -64,16 +65,29 @@ func printDirTree(node DirTreeNode, branches *[]bool) {
 }
 
 func main() {
-	dirOnly := flag.Bool("d", false, "Show only directories")
-	flag.Parse()
+	dirOnly := false
 	dir := ""
-	if flag.NArg() == 0 {
+	if len(os.Args) == 1 {
 		dir = "."
-	} else if flag.NArg() == 1 {
-		dir = flag.Arg(0)
+	} else if len(os.Args) == 2 {
+		if os.Args[1] == "-d" {
+			dirOnly = true
+			dir = "."
+		} else {
+			dir = os.Args[1]
+		}
+	} else if len(os.Args) == 3 && (os.Args[1] == "-d" || os.Args[2] == "-d") {
+		dirOnly = true
+		if os.Args[1] == "-d" {
+			dir = os.Args[2]
+		} else {
+			dir = os.Args[1]
+		}
 	} else {
-		flag.PrintDefaults()
+		fmt.Print("Usage: tree [directory] [-d]\n" +
+			"  -d\tShow only directories\n" +
+			"  If no directory provided, current directory will be traversed")
 		return
 	}
-	printDirTree(generateDirTree(dir, dir, *dirOnly), nil)
+	printDirTree(generateDirTree(dir, dir, dirOnly), nil)
 }
